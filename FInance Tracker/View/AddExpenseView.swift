@@ -9,8 +9,8 @@ struct AddExpenseView: View {
     @State private var amount = ""
     @State private var title = ""
     @State private var note = ""
-    @State private var category = "Food"
-    @State private var currency = "₴"
+    @State private var category = String(localized: "food")
+    @State private var currency = "$"
     @State private var type = "expense"
 
     private let categories = Categories()
@@ -25,12 +25,12 @@ struct AddExpenseView: View {
             VStack(spacing: 0) {
 
                 VStack(spacing: 6) {
-                    Text("Amount")
+                    Text(String(localized: "amount"))
                         .font(.caption)
                         .foregroundStyle(.secondary)
 
                     HStack(alignment: .firstTextBaseline, spacing: 4) {
-                        Text("₴")
+                        Text("$")
                             .font(.system(size: 32, weight: .medium))
                             .foregroundStyle(.secondary)
 
@@ -59,20 +59,20 @@ struct AddExpenseView: View {
                     VStack(spacing: 20) {
 
                         HStack(spacing: 10) {
-                            typeButton("Expense", "expense", .red)
-                            typeButton("Income", "income", .green)
+                            typeButton(String(localized: "expense"), "expense", .red)
+                            typeButton(String(localized: "income"), "income", .green)
                         }
                         .padding(.top, 16)
 
-                        fieldSection("Name") {
-                            TextField("Example: Lunch at café", text: $title)
+                        fieldSection(String(localized: "name_transaction")) {
+                            TextField(String(localized: "example: Lunch at café"), text: $title)
                                 .padding(12)
                                 .background(Color(.secondarySystemBackground))
                                 .cornerRadius(12)
                         }
 
                         VStack(alignment: .leading, spacing: 10) {
-                            Text("Category")
+                            Text(String(localized: "category"))
                                 .font(.caption)
                                 .foregroundStyle(.secondary)
 
@@ -85,9 +85,9 @@ struct AddExpenseView: View {
                                 .padding(.horizontal, 1)
                             }
                         }
-
-                        fieldSection("Note (optional)") {
-                            TextField("Add details...", text: $note)
+                        
+                        fieldSection(String(localized: "note_optional")) {
+                            TextField(String(localized: "add_details"), text: $note)
                                 .padding(12)
                                 .background(Color(.secondarySystemBackground))
                                 .cornerRadius(12)
@@ -99,7 +99,7 @@ struct AddExpenseView: View {
                 }
 
                 Button(action: save) {
-                    Text("Add transaction")
+                    Text(String(localized: "add_transaction"))
                         .font(.headline)
                         .foregroundColor(.white)
                         .frame(maxWidth: .infinity)
@@ -120,11 +120,11 @@ struct AddExpenseView: View {
             .onTapGesture {
                 UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
             }
-            .navigationTitle("New transaction")
+            .navigationTitle(String(localized: "new_transaction"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") { dismiss() }
+                    Button(String(localized: "cancel")) { dismiss() }
                 }
             }
         }

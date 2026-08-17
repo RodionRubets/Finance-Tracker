@@ -1,11 +1,11 @@
 import SwiftUI
 import CoreData
+import Combine
 
 struct ContentView: View {
 
-    let vm = MainScreenViewModel()
+    @StateObject private var vm = MainScreenViewModel()
     
-    @StateObject private var currencyService = CurrencyService()
     @Environment(\.managedObjectContext) private var context
     @Environment(\.dismiss) private var dismiss
     @State private var showAddView = false
@@ -14,6 +14,9 @@ struct ContentView: View {
     @State private var name: String = "User"
     @State private var showAnalytics = false
     @State private var showSettings = false
+    @StateObject private var currencyService = CurrencyService()
+
+
 
     @FetchRequest(
         sortDescriptors: [
@@ -40,12 +43,13 @@ struct ContentView: View {
             VStack {
                 HStack(alignment: .top) {
                     VStack(alignment: .leading, spacing: 4) {
-                        Text("Hi, \(name)")
+                       //b Text("Hi, \(name)")
+                        Text("\(String(localized: "hi")), \(name)")
                             .font(.title3)
                             .foregroundStyle(.secondary)
                             .bold()
                         
-                        Text("Your Finance")
+                        Text(String(localized: "your_finance"))
                             .font(.title)
                             .fontWeight(.bold)
                     }
@@ -83,22 +87,22 @@ struct ContentView: View {
                 //  CARD
                 VStack(alignment: .leading, spacing: 5) {
                     
-                    Text("Balance")
+                    Text(String(localized: "balance"))
                         .font(.caption)
                         .foregroundStyle(.white.opacity(0.8))
                     
-                    Text("\(vm.totalBalance(transactions: Array(transactions)), specifier: "%.2f") ₴")
+                    Text("\(vm.totalBalance(transactions: Array(transactions)), specifier: "%.2f") $")
                         .font(.system(size: 32, weight: .bold))
                         .foregroundColor(.white)
                     
                     HStack {
                         
                         VStack(alignment: .leading, spacing: 3) {
-                            Text("Income")
+                            Text(String(localized: "income"))
                                 .font(.caption)
                                 .foregroundStyle(.white.opacity(0.9))
                             
-                            Text("\(vm.totalIncome(transactions: Array(transactions)), specifier: "%.2f") ₴")
+                            Text("\(vm.totalIncome(transactions: Array(transactions)), specifier: "%.2f") $")
                                 .foregroundColor(.white)
                                 .font(.callout)
                                 .bold()
@@ -107,11 +111,11 @@ struct ContentView: View {
                         Spacer()
                         
                         VStack(alignment: .trailing, spacing: 3) {
-                            Text("Expense")
+                            Text(String(localized: "expense"))
                                 .font(.caption)
                                 .foregroundStyle(.white.opacity(0.9))
                             
-                            Text("\(vm.totalExpense(transactions: Array(transactions)), specifier: "%.2f") ₴")
+                            Text("\(vm.totalExpense(transactions: Array(transactions)), specifier: "%.2f") $")
                                 .foregroundColor(.white)
                                 .font(.callout)
                                 .bold()
@@ -132,35 +136,11 @@ struct ContentView: View {
                 .padding()
                 
                 // MARK: - Currency rates
-                HStack(spacing: 10) {
-                    currencyChip(code: "USD", rate: currencyService.usdRate, flag: "🇺🇸")
-                    currencyChip(code: "EUR", rate: currencyService.eurRate, flag: "🇪🇺")
-
-                    Spacer()
-
-                    if currencyService.isLoading {
-                        ProgressView()
-                            .scaleEffect(0.7)
-                    } else {
-                        Button {
-                            currencyService.fetchRates()
-                        } label: {
-                            Image(systemName: "arrow.clockwise")
-                                .font(.system(size: 12))
-                                .foregroundColor(.secondary)
-                        }
-                    }
-                }
-                .padding(.horizontal)
-                .padding(.bottom, 4)
-                .onAppear {
-                    currencyService.fetchRates()
-                }
                 
                 HStack(spacing: 8) {
-                    filterChip("All", "all")
-                    filterChip("Expense", "expense")
-                    filterChip("Income", "income")
+                    filterChip(String(localized: "all"), "all")
+                    filterChip(String(localized: "expense"), "expense")
+                    filterChip(String(localized: "income"), "income")
                 }
                 .padding(.horizontal)
                 .padding(.bottom, 4)
@@ -207,7 +187,7 @@ struct ContentView: View {
             }
             
             .fullScreenCover(isPresented: $showAnalytics) {
-                AnalyticsView(transactions: Array(transactions))
+                AnalyticsView(currencyService: currencyService, transactions: Array(transactions))
             }
             .fullScreenCover(isPresented: $showSettings) {
                 SettingsView()
@@ -216,28 +196,15 @@ struct ContentView: View {
             .fullScreenCover(item: $selectedTransaction) { transaction in
                 TransactionDetailView(transaction: transaction)
             }
-            .onAppear { loadUserName() }
+            .onAppear {
+                loadUserName()
+                checkAndAccrueSalary()
+            }
             .onReceive(NotificationCenter.default.publisher(for: UserDefaults.didChangeNotification)) { _ in
                 loadUserName()
+                vm.objectWillChange.send()
             }
         }
-    }
-    
-    private func currencyChip(code: String, rate: Double, flag: String) -> some View {
-        HStack(spacing: 6) {
-            Text(flag)
-                .font(.system(size: 14))
-            Text(code)
-                .font(.system(size: 12, weight: .medium))
-                .foregroundColor(.primary)
-            Text(rate > 0 ? "₴ \(rate, specifier: "%.2f")" : "—")
-                .font(.system(size: 12))
-                .foregroundColor(.secondary)
-        }
-        .padding(.horizontal, 12)
-        .padding(.vertical, 7)
-        .background(Color(.secondarySystemBackground))
-        .cornerRadius(10)
     }
     
     private func filterChip(_ label: String, _ value: String) -> some View {
@@ -287,6 +254,45 @@ struct ContentView: View {
                 )
         }
     }
+    
+    private func checkAndAccrueSalary() {
+        let amount = UserDefaults.standard.double(forKey: "salaryAmount")
+        let daysString = UserDefaults.standard.string(forKey: "salaryDays") ?? ""
+        let lastAccrual = UserDefaults.standard.string(forKey: "lastSalaryAccrualDate") ?? ""
+
+        guard amount > 0, !daysString.isEmpty else { return }
+
+        let daysArray = daysString.split(separator: ",").compactMap { Int($0.trimmingCharacters(in: .whitespaces)) }
+        guard !daysArray.isEmpty else { return }
+
+        let todayDay = Calendar.current.component(.day, from: Date())
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd"
+        let todayString = formatter.string(from: Date())
+
+        if daysArray.contains(todayDay) && lastAccrual != todayString {
+            
+            let fractionAmount = amount / Double(daysArray.count)
+            
+            let newTransaction = Transaction(context: context)
+            newTransaction.title = String(localized: "salary")
+            newTransaction.amount = fractionAmount
+            newTransaction.category = String(localized: "salary")
+            newTransaction.type = "income"
+            newTransaction.date = Date()
+            newTransaction.currency = transactions.first?.currency ?? "$"
+            newTransaction.note = String(localized: "payroll_calculation")
+
+            do {
+                try context.save()
+                UserDefaults.standard.set(todayString, forKey: "lastSalaryAccrualDate")
+                print("ЗП успішно нараховано!")
+            } catch {
+                print("Помилка збереження ЗП: \(error)")
+            }
+        }
+    }
+
     
     private func transactionRow(_ transaction: Transaction) -> some View {
 

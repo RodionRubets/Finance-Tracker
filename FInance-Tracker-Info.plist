@@ -2,7 +2,14 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-	<key>_XCCurrentVersionName</key>
-	<string>Finance_Tracker.xcdatamodel</string>
+	<key></key>
+	<string></string>
+	<key>CFBundleLocalizations</key>
+	<array>
+		<string>Ukrainian</string>
+		<string>en</string>
+	</array>
+	<key>NSAppTransportSecurity</key>
+	<dict/>
 </dict>
 </plist>

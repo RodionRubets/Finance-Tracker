@@ -22,8 +22,8 @@ struct TransactionDetailView: View {
 
             VStack(spacing: 0) {
 
-                VStack(spacing: 0) {
-                    infoRow(icon: "calendar", label: "Date") {
+                VStack(spacing: 5) {
+                    infoRow(icon: "calendar", label: String(localized: "date")) {
                         if let date = transaction.date {
                             Text(date.formatted(date: .long, time: .shortened))
                                 .font(.system(size: 13, weight: .medium))
@@ -31,8 +31,8 @@ struct TransactionDetailView: View {
                         }
                     }
 
-                    infoRow(icon: "tag", label: "Type") {
-                        Text(isIncome ? "Income" : "Expense")
+                    infoRow(icon: "tag", label: String(localized: "type")) {
+                        Text(isIncome ? String(localized: "income") : String(localized: "expense"))
                             .font(.system(size: 11, weight: .medium))
                             .padding(.horizontal, 10)
                             .padding(.vertical, 4)
@@ -41,15 +41,15 @@ struct TransactionDetailView: View {
                             .clipShape(Capsule())
                     }
 
-                    infoRow(icon: "dollarsign.circle", label: "Currency") {
-                        Text("\(transaction.currency ?? "₴") UAH")
+                    infoRow(icon: "dollarsign.circle", label: String(localized: "currency")) {
+                        Text("\(transaction.currency ?? "₴") USD")
                             .font(.system(size: 13, weight: .medium))
                             .foregroundColor(.primary)
                     }
 
                     if let note = transaction.note, !note.isEmpty {
                         VStack(alignment: .leading, spacing: 8) {
-                            Text("Note")
+                            Text(String(localized: "note"))
                                 .font(.system(size: 11))
                                 .foregroundStyle(.secondary)
                             Text(note)
@@ -73,7 +73,7 @@ struct TransactionDetailView: View {
                         HStack(spacing: 8) {
                             Image(systemName: "trash")
                                 .font(.system(size: 14))
-                            Text("Delete transaction")
+                            Text(String(localized: "delete_transaction"))
                                 .font(.system(size: 14, weight: .medium))
                         }
                         .foregroundColor(Color(red: 0.64, green: 0.18, blue: 0.18))
@@ -89,6 +89,7 @@ struct TransactionDetailView: View {
                     .padding(.horizontal, 20)
                     .padding(.bottom, 32)
                 }
+                .padding(.top, 15)
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
                 .background(Color(.systemBackground))
                 .clipShape(RoundedCorner(radius: 28, corners: [.topLeft, .topRight]))
