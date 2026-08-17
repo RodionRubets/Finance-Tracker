@@ -13,81 +13,122 @@ struct SetNameView: View {
 
     var body: some View {
         ZStack {
-            LinearGradient(
-                colors: [.blue, .red],
-                startPoint: .topLeading,
-                endPoint: .bottomTrailing
-            )
+            Color(red: 0.04, green: 0.04, blue: 0.08)
+                .ignoresSafeArea()
+
+            // Blur кола на фоні
+            GeometryReader { geo in
+                Circle()
+                    .fill(Color.blue.opacity(0.3))
+                    .frame(width: 300, height: 300)
+                    .blur(radius: 80)
+                    .offset(x: geo.size.width * 0.4, y: -80)
+
+                Circle()
+                    .fill(Color.red.opacity(0.2))
+                    .frame(width: 250, height: 250)
+                    .blur(radius: 80)
+                    .offset(x: -60, y: geo.size.height * 0.6)
+            }
             .ignoresSafeArea()
 
-            VStack(spacing: 32) {
+            VStack(spacing: 0) {
                 Spacer()
 
+                // MARK: - Icon
                 ZStack {
-                    Circle()
-                        .fill(.white.opacity(0.15))
-                        .frame(width: 100, height: 100)
-                    Image(systemName: "wallet.pass.fill")
-                        .font(.system(size: 44))
+                    RoundedRectangle(cornerRadius: 26)
+                        .fill(
+                            LinearGradient(
+                                colors: [Color(red: 0.1, green: 0.37, blue: 0.65), Color(red: 0.64, green: 0.18, blue: 0.18)],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            )
+                        )
+                        .frame(width: 90, height: 90)
+                        .shadow(color: Color.blue.opacity(0.4), radius: 20, y: 8)
+
+                    Image(systemName: "chart.pie.fill")
+                        .font(.system(size: 40))
                         .foregroundColor(.white)
                 }
+                .padding(.bottom, 24)
 
+                // MARK: - Title
                 VStack(spacing: 8) {
-                    Text("Welcome!")
-                        .font(.largeTitle)
-                        .fontWeight(.bold)
+                    Text("Welcome 👋")
+                        .font(.system(size: 28, weight: .semibold))
                         .foregroundColor(.white)
 
-                    Text("Let's set up your finance tracker")
-                        .font(.subheadline)
-                        .foregroundColor(.white.opacity(0.8))
+                    Text("Your personal finance tracker.\nLet's get you set up in seconds.")
+                        .font(.system(size: 14))
+                        .foregroundColor(.white.opacity(0.5))
+                        .multilineTextAlignment(.center)
+                        .lineSpacing(4)
                 }
+                .padding(.bottom, 40)
 
+                // MARK: - Fields
                 VStack(spacing: 16) {
-                    VStack(alignment: .leading, spacing: 6) {
-                        Text("Your name")
-                            .font(.caption)
-                            .foregroundColor(.white.opacity(0.8))
-
-                        TextField("Example: John", text: $nameInput)
-                            .padding()
-                            .background(.white.opacity(0.15))
-                            .cornerRadius(12)
-                            .foregroundColor(.white)
-                            .tint(.white)
-                    }
-
-                    VStack(alignment: .leading, spacing: 6) {
-                        Text("Current balance (₴)")
-                            .font(.caption)
-                            .foregroundColor(.white.opacity(0.8))
-
-                        TextField("Example: 10000", text: $balanceInput)
-                            .keyboardType(.decimalPad)
-                            .padding()
-                            .background(.white.opacity(0.15))
-                            .cornerRadius(12)
-                            .foregroundColor(.white)
-                            .tint(.white)
-                    }
+                    fieldView(label: "YOUR NAME", placeholder: "Example: John", text: $nameInput, keyboard: .default)
+                    fieldView(label: "CURRENT BALANCE ($)", placeholder: "Example: 1000", text: $balanceInput, keyboard: .decimalPad)
                 }
-                .padding(.horizontal)
+                .padding(.horizontal, 24)
+                .padding(.bottom, 24)
 
+                // MARK: - Button
                 Button(action: save) {
-                    Text("Get Started")
-                        .font(.headline)
-                        .foregroundColor(.blue)
+                    Text("Get Started →")
+                        .font(.system(size: 16, weight: .semibold))
+                        .foregroundColor(.white)
                         .frame(maxWidth: .infinity)
-                        .padding()
-                        .background(.white)
-                        .cornerRadius(12)
-                        .padding(.horizontal)
+                        .padding(16)
+                        .background(
+                            LinearGradient(
+                                colors: isValid
+                                    ? [Color(red: 0.1, green: 0.37, blue: 0.65), Color(red: 0.1, green: 0.5, blue: 0.83)]
+                                    : [Color.gray.opacity(0.3), Color.gray.opacity(0.3)],
+                                startPoint: .leading,
+                                endPoint: .trailing
+                            )
+                        )
+                        .cornerRadius(14)
+                        .shadow(color: isValid ? Color.blue.opacity(0.4) : .clear, radius: 12, y: 6)
                 }
                 .disabled(!isValid)
-                .opacity(isValid ? 1 : 0.5)
+                .padding(.horizontal, 24)
+
+                Text("Your data stays on your device")
+                    .font(.system(size: 11))
+                    .foregroundColor(.white.opacity(0.25))
+                    .padding(.top, 12)
 
                 Spacer()
             }
+        }
+        .onTapGesture {
+            UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+        }
+    }
+
+    private func fieldView(label: String, placeholder: String, text: Binding<String>, keyboard: UIKeyboardType) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text(label)
+                .font(.system(size: 11, weight: .medium))
+                .foregroundColor(.white.opacity(0.5))
+                .kerning(0.5)
+
+            TextField(placeholder, text: text)
+                .keyboardType(keyboard)
+                .padding(14)
+                .background(.white.opacity(0.07))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 14)
+                        .stroke(.white.opacity(0.12), lineWidth: 0.5)
+                )
+                .cornerRadius(14)
+                .foregroundColor(.white)
+                .tint(.white)
         }
     }
 
